@@ -55,6 +55,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     * update the state by using Extended Kalman Filter equations
   */
 
+    // Set pi for phi adjustment
+    float pi = 3.141592;
+
+
 
     float px = x_[0];
     float py = x_[1];
@@ -63,7 +67,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
     float rho = sqrt(px*px + py*py);
     float phi = atan2(py, px);
-    float rho_dot = (px*vx + py*vy)/(sqrt(px*px + py*py));
+    float rho_dot = (px*vx + py*vy)/rho;
 
     // Calculate h(x_p)
     VectorXd Hx_(3);
@@ -73,8 +77,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     VectorXd y = z - Hx_;
 
     // Adjust phi for y
-    float pi = 3.141592;
-
+    
     if (y[1] > pi) 
     {
         y[1] -= 2*pi;
@@ -85,8 +88,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
         y[1] += 2*pi;
     }
 
-    MatrixXd Ht = Hx_.transpose();
-    MatrixXd S = Hx_*P_*Ht + R_;
+    //TODO Might be better to create a function for below
+
+    MatrixXd Ht = H_.transpose();
+    MatrixXd S = H_*P_*Ht + R_;
     MatrixXd Si = S.inverse();
     MatrixXd PHt = P_*Ht;
     MatrixXd K = PHt*Si;
@@ -94,6 +99,6 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     x_ = x_ + (K*y);
     long x_size = x_.size();
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
-    P_ = (I - K*Hx_)*P_;    
+    P_ = (I - K*H_)*P_;    
 
 }

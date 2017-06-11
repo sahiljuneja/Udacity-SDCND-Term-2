@@ -44,17 +44,22 @@ FusionEKF::FusionEKF() {
   float noise_ay = 9.0;
 
   // Initial Transition Matrix
+
+  ekf_.F_ = MatrixXd(4, 4); // Not initializing this led to segmentation fault
   ekf_.F_ << 1, 0, 1 , 0,
              0, 1, 0, 1,
              0, 0, 1, 0,
              0, 0, 0, 1;
 
   // State Covariance Matrix
+
+  ekf_.P_ = MatrixXd(4, 4); // Not initializing this led to segmentation fault
   ekf_.P_ << 1, 0, 0, 0,
              0, 1, 0, 0,
              0, 0, 1000, 0,
              0, 0, 1000, 0;
 
+  //Tools tools; Initialized in header
 }
 
 /**
@@ -78,21 +83,24 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    ekf_.x_ << 0.001, 0.001, 0.001, 0.001;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
 
-        float rho = measurement_pack.raw_measurements_[0]*cos(measurement_pack.raw_measurements_[1]);
-        float phi = measurement_pack.raw_measurements_[0]*sin(measurement_pack.raw_measurements_[1]);
-        float rho_dot = measurement_pack.raw_measurements_[0]*sin(measurement_pack.raw_measurements_[1]);
+        float rho = measurement_pack.raw_measurements_[0];
+        float phi = measurement_pack.raw_measurements_[1];
+        float rho_dot = measurement_pack.raw_measurements_[2];
 
         ekf_.x_(0) = rho*cos(phi);
         ekf_.x_(1) = rho*sin(phi);
-        ekf_.x_(2) = rho_dot*cos(phi);
-        ekf_.x_(3) = rho_dot*sin(phi);
+        //ekf_.x_(2) = rho_dot*cos(phi);
+        //ekf_.x_(3) = rho_dot*sin(phi);
+
+        ekf_.x_(2) = 0;
+        ekf_.x_(3) = 0;
 
 
     }
@@ -102,6 +110,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         ekf_.x_(0) = measurement_pack.raw_measurements_[0];
         ekf_.x_(1) = measurement_pack.raw_measurements_[1];
+
+        ekf_.x_(2) = 0;
+        ekf_.x_(3) = 0;
     }
 
     previous_timestamp_ = measurement_pack.timestamp_; // Important to not have rmse blow up?
