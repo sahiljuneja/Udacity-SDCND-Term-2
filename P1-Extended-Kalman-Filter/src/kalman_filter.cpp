@@ -78,12 +78,12 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
     // Adjust phi for y
     
-    if (y[1] > pi) 
+    while (y[1] > pi) 
     {
         y[1] -= 2*pi;
     }
 
-    else if (y[1] < -pi) 
+    while (y[1] < -pi) 
     {
         y[1] += 2*pi;
     }
