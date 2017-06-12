@@ -35,7 +35,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
     vector<double> weights; // simplify resample
 
-    vector<Particle> particles;
+    vector<Particle> particles(num_particles);
     for (int i = 0; i < num_particles; i++)
     {
         Particle p = {i, x + x_init(gen), y + y_init(gen), theta + theta_init(gen), 1.0};
@@ -99,7 +99,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
     for (int i = 0; i < observations.size(); i++)
     {
-        double current_dist = 1e6;
+        double current_dist = 1e9;
+        int new_j;
         for (int j = 0; j < predicted.size(); j++)
         {
             // Distance between two points - use dist() more convenient
@@ -108,9 +109,11 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             if (dist_ < current_dist)
             {
                 current_dist = dist_;
-                observations[i].id = j;
+                new_j = predicted[j].id;
             }
         }
+
+        observations[i].id = new_j;
 
     }
 
@@ -133,7 +136,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     double stddev_x = std_landmark[0];
     double stddev_y = std_landmark[1];
     double sigma = stddev_x*stddev_y;
-    double denom = 1/(2*M_PI*sigma);
+    double denom = 1.0/(2.0*M_PI*sigma);
     double stddev_xsqr = pow(stddev_x, 2);
     double stddev_ysqr = pow(stddev_y, 2);
 
@@ -141,12 +144,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for (int i = 0; i < particles.size(); i++)
     {
         // Transform Observations to Map Coordinates
-        vector<LandmarkObs> transformed_obs = observations; //check if initialization like this helps
+        //vector<LandmarkObs> transformed_obs = observations; //check if initialization like this helps
+        vector<LandmarkObs> transformed_obs;
         for (int j = 0; j < observations.size(); j++)
         {
             transformed_obs[j].x = particles[i].x + observations[j].x*cos(particles[i].theta) - observations[j].y*sin(particles[i].theta);
             transformed_obs[j].y = particles[i].y + observations[j].x*sin(particles[i].theta) + observations[j].y*cos(particles[i].theta);
-            transformed_obs[j].id = j;
+            transformed_obs[j].id = observations[j].id;
 
         }
 
@@ -171,9 +175,23 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         
         double weight_init = 1.0;
         // Update weights
+        //
+        
         for (int k = 0; k < transformed_obs.size(); k++)
         {
-            weight_init *= denom*exp(pow((transformed_obs[k].x - nearest_landmark[k].x), 2)/(2*stddev_xsqr) + pow(transformed_obs[k].y - nearest_landmark[k].y, 2)/(2*stddev_ysqr));
+            double pred_x;
+            double pred_y;
+
+            for (int j = 0; j < nearest_landmark.size(); j++)
+            {
+                if (nearest_landmark[j].id == transformed_obs[k].id)
+                {
+                    pred_x = nearest_landmark[j].x;
+                    pred_y = nearest_landmark[j].y;
+                }
+            }
+
+            weight_init *= denom*exp(-(pow((transformed_obs[k].x - pred_x), 2)/(2*stddev_xsqr) + pow(transformed_obs[k].y - pred_y, 2)/(2*stddev_ysqr)));
 
         }
 
@@ -189,12 +207,13 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
     default_random_engine gen;
-    discrete_distribution<> discrete_dist(weights.begin(), weights.end());
+    discrete_distribution<int> discrete_dist(weights.begin(), weights.end());
 
     vector<Particle> resample_particles;
     for (int i = 0; i < particles.size(); i++)
     {
         resample_particles[i] = particles[discrete_dist(gen)];
+        weights[i] = particles[discrete_dist(gen)].weight;
 
     }
     particles = resample_particles;
