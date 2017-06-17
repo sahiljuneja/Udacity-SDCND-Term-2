@@ -33,9 +33,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     normal_distribution<double> y_init(0, std[1]);
     normal_distribution<double> theta_init(0, std[2]);
 
-    vector<double> weights; // simplify resample
+    //vector<double> weights; // simplify resample
 
-    vector<Particle> particles(num_particles);
+    //vector<Particle> particles(num_particles);
     for (int i = 0; i < num_particles; i++)
     {
         Particle p = {i, x + x_init(gen), y + y_init(gen), theta + theta_init(gen), 1.0};
@@ -144,8 +144,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for (int i = 0; i < particles.size(); i++)
     {
         // Transform Observations to Map Coordinates
-        //vector<LandmarkObs> transformed_obs = observations; //check if initialization like this helps
-        vector<LandmarkObs> transformed_obs;
+        vector<LandmarkObs> transformed_obs(observations.size()); //check if initialization like this helps
+        //vector<LandmarkObs> transformed_obs;
         for (int j = 0; j < observations.size(); j++)
         {
             transformed_obs[j].x = particles[i].x + observations[j].x*cos(particles[i].theta) - observations[j].y*sin(particles[i].theta);
@@ -209,7 +209,7 @@ void ParticleFilter::resample() {
     default_random_engine gen;
     discrete_distribution<int> discrete_dist(weights.begin(), weights.end());
 
-    vector<Particle> resample_particles;
+    vector<Particle> resample_particles(particles.size());
     for (int i = 0; i < particles.size(); i++)
     {
         resample_particles[i] = particles[discrete_dist(gen)];
