@@ -128,7 +128,7 @@ int main() {
           double Lf = 2.67;
           double psi_proj = -v*steering_angle/Lf*latency;
           double v_proj = v;
-// + throttle*latency;
+		  // + throttle*latency;
 
           // CTE and EPSI
           //double cte = polyeval(coeffs, x_proj);
@@ -157,18 +157,18 @@ int main() {
           //else if (throttle_value < -1.0) throttle_value = -1.0;
 
           //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals;
-          vector<double> mpc_y_vals;
+          vector<double> mpc_x_vals(output_[2]);
+          vector<double> mpc_y_vals(output_[2]);
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-          /*
-          for (int i=0; i < output[2]; i++)
+          
+          for (int i=0; i < output_[2]; i++)
           {
-              mpc_x_vals[i] = output[i*2 + 3];
-              mpc_y_vals[i] = output[i*2 + 4];
+              mpc_x_vals[i] = output_[i*2 + 3];
+              mpc_y_vals[i] = output_[i*2 + 4];
           }
-          */
+        
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -179,14 +179,14 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-          /*
+         
 
           for (int i = 0; i < ptsx.size(); i++)
           {
               next_x_vals.push_back(new_x[i]);
               next_y_vals.push_back(new_y[i]);
           }
-          */
+          
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
