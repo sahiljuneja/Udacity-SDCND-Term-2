@@ -66,6 +66,18 @@ public:
 
   ///* Sigma point spreading parameter
   double lambda_;
+  
+  ///* the current NIS for radar
+  double NIS_radar_;
+
+  ///* the current NIS for laser
+  double NIS_laser_;
+
+  MatrixXd R_laser_;
+
+  MatrixXd R_radar_;
+  
+  MatrixXd H_;
 
 
   /**
